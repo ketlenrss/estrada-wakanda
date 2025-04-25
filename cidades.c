@@ -11,9 +11,26 @@ int comparar(const void *a, const void *b) {
 }
 
 // Lê o arquivo e retorna o ponteiro para a estrutura Estrada
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "cidades.h"
+
 Estrada *getEstrada(const char *nomeArquivo) {
     FILE *arq = fopen(nomeArquivo, "r");
     if (!arq) return NULL;
+
+    int T, N;
+    if (fscanf(arq, "%d", &T) != 1 || fscanf(arq, "%d", &N) != 1) {
+        fclose(arq);
+        return NULL;
+    }
+
+    // Restrições de T e N
+    if (T < 3 || T > 1000000 || N < 2 || N > 10000) {
+        fclose(arq);
+        return NULL;
+    }
 
     Estrada *e = malloc(sizeof(Estrada));
     if (!e) {
@@ -21,28 +38,16 @@ Estrada *getEstrada(const char *nomeArquivo) {
         return NULL;
     }
 
-    // Leitura do comprimento da estrada e número de cidades
-    if (fscanf(arq, "%d", &e->T) != 1 || fscanf(arq, "%d", &e->N) != 1) {
-        free(e);
-        fclose(arq);
-        return NULL;
-    }
-
-    // Validação de T e N
-    if (e->T < 3 || e->T > 1000000 || e->N < 2 || e->N > 10000) {
-        free(e);
-        fclose(arq);
-        return NULL;
-    }
-
-    e->C = malloc(e->N * sizeof(Cidade));
+    e->T = T;
+    e->N = N;
+    e->C = malloc(N * sizeof(Cidade));
     if (!e->C) {
         free(e);
         fclose(arq);
         return NULL;
     }
 
-    int *posicoes = malloc(e->N * sizeof(int));
+    int *posicoes = malloc(N * sizeof(int)); // Para checar duplicatas
     if (!posicoes) {
         free(e->C);
         free(e);
@@ -52,13 +57,13 @@ Estrada *getEstrada(const char *nomeArquivo) {
 
     int valido = 1;
 
-    for (int i = 0; i < e->N && valido; i++) {
+    for (int i = 0; i < N; i++) {
         if (fscanf(arq, "%d", &e->C[i].Posicao) != 1) {
             valido = 0;
             break;
         }
 
-        fgetc(arq); // Consome espaço
+        fgetc(arq); // Consome o espaço entre número e nome
         if (!fgets(e->C[i].Nome, 256, arq)) {
             valido = 0;
             break;
@@ -66,13 +71,13 @@ Estrada *getEstrada(const char *nomeArquivo) {
 
         e->C[i].Nome[strcspn(e->C[i].Nome, "\n")] = '\0';
 
-        // Valida posição da cidade
-        if (e->C[i].Posicao <= 0 || e->C[i].Posicao >= e->T) {
+        // Restrições: 0 < Xi < T
+        if (e->C[i].Posicao <= 0 || e->C[i].Posicao >= T) {
             valido = 0;
             break;
         }
 
-        // Verifica se posição é única
+        // Verifica se Xi é único
         for (int j = 0; j < i; j++) {
             if (e->C[i].Posicao == posicoes[j]) {
                 valido = 0;

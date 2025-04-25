@@ -1,4 +1,3 @@
 10
-2
-1 CidadeA
-3 CidadeB
+1
+5 CidadeÚnica
